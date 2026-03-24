@@ -17,23 +17,30 @@ var (
 	dimColor  = color.New(color.FgHiBlack)
 )
 
-func PrintFindResults(results []schema.FindResult) {
+func PrintFindResults(results []schema.FindResult, detail bool) {
 	if len(results) == 0 {
 		dimColor.Println("No results found.")
 		return
 	}
 
-	for i, r := range results {
-		if i > 0 {
-			fmt.Println()
-			dimColor.Println(strings.Repeat("─", 60))
-			fmt.Println()
-		}
+	if detail {
+		for i, r := range results {
+			if i > 0 {
+				fmt.Println()
+				dimColor.Println(strings.Repeat("─", 60))
+				fmt.Println()
+			}
 
-		kindColor.Printf("[%s] ", strings.ToUpper(r.Kind))
-		nameColor.Println(r.Name)
-		fmt.Println()
-		fmt.Println(r.Definition)
+			kindColor.Printf("[%s] ", strings.ToUpper(r.Kind))
+			nameColor.Println(r.Name)
+			fmt.Println()
+			fmt.Println(r.Definition)
+		}
+	} else {
+		for _, r := range results {
+			kindColor.Printf("[%s] ", strings.ToUpper(r.Kind))
+			nameColor.Println(r.Name)
+		}
 	}
 }
 

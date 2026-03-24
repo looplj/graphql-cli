@@ -81,19 +81,39 @@ graphql-cli mutate -e production 'mutation { createUser(name: "test") { id } }'
 graphql-cli mutate -e production -f mutation.graphql -v '{"name": "test"}'
 ```
 
-### `find` — Search schema definitions
+### `update` — Update an existing endpoint
 
 ```bash
-graphql-cli find -e <endpoint> [keyword] [--query] [--mutation] [--type] [--input] [--enum]
+graphql-cli update <name> [--url <url>] [-d <description>] [--header key=value]
 ```
 
 **Examples:**
 
 ```bash
+graphql-cli update production --url https://api.example.com/v2/graphql
+graphql-cli update production --header "Authorization=Bearer new-token"
+graphql-cli update production --url https://new-url.com/graphql --header "X-Custom=value" -d "Updated endpoint"
+```
+
+### `find` — Search schema definitions
+
+```bash
+graphql-cli find -e <endpoint> [keyword] [--query] [--mutation] [--type] [--input] [--enum] [--detail]
+```
+
+By default, only names are shown. Use `--detail` to display full definitions with fields and arguments.
+
+The keyword supports glob syntax (`*`, `?`, `[...]`). Without glob characters, it matches as a substring (e.g., `user` matches `getUser`, `UserInput`).
+
+**Examples:**
+
+```bash
 graphql-cli find -e production user
+graphql-cli find -e production "get*"
 graphql-cli find -e production user --query
 graphql-cli find -e production --mutation
 graphql-cli find -e production status --enum
+graphql-cli find -e production user --detail
 ```
 
 ### `login` — Authenticate with an endpoint

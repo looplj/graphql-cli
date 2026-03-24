@@ -15,6 +15,7 @@ A skill for managing GraphQL endpoints and executing operations using `graphql-c
 ## Capabilities
 
 - Add and manage multiple GraphQL endpoints (remote URL or local schema file)
+- Update existing endpoint URL, headers, or description
 - Authenticate with endpoints (Bearer token, Basic auth, custom header)
 - Execute GraphQL queries and mutations
 - Explore and search GraphQL schemas by keyword
@@ -54,23 +55,34 @@ graphql-cli add production --url https://api.example.com/graphql --description "
 graphql-cli add local --schema-file ./testdata/schema.graphql --description "Local schema"
 ```
 
-### 2. List endpoints
+### 2. Update an endpoint
+
+```bash
+graphql-cli update <name> --url <new-url> [--description "desc"] [--header "Key=Value"]
+```
+
+Example:
+```bash
+graphql-cli update production --url https://api.example.com/v2/graphql
+graphql-cli update production --header "Authorization=Bearer new-token" -d "Updated prod API"
+```
+
+Headers are merged — existing headers not specified in the update are preserved.
+
+### 3. List endpoints
 
 ```bash
 graphql-cli list            # names and URLs
 graphql-cli list --detail   # includes headers (masked) and auth status
 ```
 
-### 3. Authenticate
+### 4. Authenticate
 
 ```bash
-# Interactive (prompts for auth type and credentials)
-graphql-cli login <endpoint>
-
-# Non-interactive
 graphql-cli login <endpoint> --type token --token "my-api-key"
 graphql-cli login <endpoint> --type basic --user admin --pass secret
 graphql-cli login <endpoint> --type header --key X-API-Key --value "key123"
+graphql-cli login -e production --type token --token "my-token"
 
 # Remove credentials
 graphql-cli logout <endpoint>
@@ -78,12 +90,7 @@ graphql-cli logout <endpoint>
 
 Credentials are stored in the OS keyring (macOS Keychain, Windows Credential Manager, GNOME Keyring) with a plaintext file fallback.
 
-You can also specify the endpoint via `-e`:
-```bash
-graphql-cli login -e production --type token --token "my-token"
-```
-
-### 4. Execute a query
+### 5. Execute a query
 
 ```bash
 graphql-cli query '<graphql-query>' -e <endpoint>
@@ -92,7 +99,7 @@ graphql-cli query '{ user(id: "1") { name } }' -e <endpoint> -v '{"id": "1"}'
 graphql-cli query '{ me { name } }' -e <endpoint> -H "Authorization=Bearer token"
 ```
 
-### 5. Execute a mutation
+### 6. Execute a mutation
 
 ```bash
 graphql-cli mutate '<graphql-mutation>' -e <endpoint>
@@ -100,11 +107,19 @@ graphql-cli mutate -f mutation.graphql -e <endpoint> -v '{"name": "test"}'
 graphql-cli mutate 'mutation { createUser(name: "test") { id } }' -e <endpoint>
 ```
 
-### 6. Explore the schema
+### 7. Explore the schema
 
 ```bash
-# Search all definitions
+# Search all definitions (names only by default)
 graphql-cli find <keyword> -e <endpoint>
+
+# Keyword supports glob syntax (*, ?, [...])
+# Without glob characters, matches as substring
+graphql-cli find "get*" -e <endpoint>
+graphql-cli find "User?" -e <endpoint>
+
+# Show full definitions with fields and arguments
+graphql-cli find <keyword> -e <endpoint> --detail
 
 # Narrow by kind
 graphql-cli find user -e <endpoint> --query          # Query fields only
@@ -144,12 +159,19 @@ graphql-cli query '{ users { id name } }' -e prod 2>/dev/null | jq '.users[0]'
 
 ### Explore before querying
 ```bash
-# First, find what queries are available
+# First, find what queries are available (names only)
 graphql-cli find -e prod --query
 
-# Then find the input types needed
-graphql-cli find CreateUser -e prod --input
+# Then use --detail to see full definitions with fields and arguments
+graphql-cli find user -e prod --query --detail
+
+# Find the input types needed
+graphql-cli find CreateUser -e prod --input --detail
 
 # Then execute
 graphql-cli mutate 'mutation { createUser(input: {name: "Alice", email: "alice@example.com"}) { id } }' -e prod
 ```
+
+## Guidelines
+
+- **Always use `find` without `--detail` first** to get an overview of matching names, then use `find --detail` on specific results to see full definitions with fields and arguments. This avoids overwhelming output when schemas are large.
