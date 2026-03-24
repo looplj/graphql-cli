@@ -85,6 +85,32 @@ func (c *Config) GetEndpoint(name string) (*Endpoint, error) {
 	return nil, fmt.Errorf("endpoint %q not found", name)
 }
 
+func (c *Config) UpdateEndpoint(name string, url *string, description *string, headers map[string]string) error {
+	for i := range c.Endpoints {
+		if c.Endpoints[i].Name == name {
+			if url != nil {
+				c.Endpoints[i].URL = *url
+			}
+
+			if description != nil {
+				c.Endpoints[i].Description = *description
+			}
+
+			for k, v := range headers {
+				if c.Endpoints[i].Headers == nil {
+					c.Endpoints[i].Headers = make(map[string]string)
+				}
+
+				c.Endpoints[i].Headers[k] = v
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("endpoint %q not found", name)
+}
+
 func (c *Config) AddEndpoint(ep Endpoint) error {
 	for _, e := range c.Endpoints {
 		if e.Name == ep.Name {

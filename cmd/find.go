@@ -16,12 +16,20 @@ var findCmd = &cobra.Command{
 	Long: `Search for types, queries, mutations, inputs, and enums in the GraphQL schema.
 Use flags to narrow the search scope.
 
+The keyword supports glob syntax (*, ?, [...]). Without glob characters,
+it matches as a substring (e.g., "user" matches "getUser", "UserInput").
+
 Examples:
-  graphql-cli find user
-  graphql-cli find user --query
-  graphql-cli find --mutation
-  graphql-cli find user --type --input
-  graphql-cli find status --enum`,
+  graphql-cli find user                              # substring match
+  graphql-cli find "get*"                            # glob: starts with "get"
+  graphql-cli find "User?"                           # glob: "User" + one char
+  graphql-cli find "{createUser,CreateUserInput}"    # glob: exact alternatives
+  graphql-cli find "[A-Z]*Input"                     # glob: capitalized, ends with "Input"
+  graphql-cli find user --query                      # only Query fields
+  graphql-cli find --mutation                        # list all mutations
+  graphql-cli find user --type --input               # types and inputs
+  graphql-cli find status --enum                     # enums only
+  graphql-cli find user --detail                     # show full definitions`,
 	Args:    cobra.MaximumNArgs(1),
 	PreRunE: requireEndpoint,
 	RunE:    runFind,
@@ -33,6 +41,7 @@ var (
 	findType     bool
 	findInput    bool
 	findEnum     bool
+	findDetail   bool
 )
 
 func init() {
@@ -41,6 +50,7 @@ func init() {
 	findCmd.Flags().BoolVar(&findType, "type", false, "search only Object/Interface/Union/Scalar types")
 	findCmd.Flags().BoolVar(&findInput, "input", false, "search only Input types")
 	findCmd.Flags().BoolVar(&findEnum, "enum", false, "search only Enum types")
+	findCmd.Flags().BoolVar(&findDetail, "detail", false, "show fields and arguments")
 	rootCmd.AddCommand(findCmd)
 }
 
@@ -78,7 +88,7 @@ func runFind(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	printer.PrintFindResults(results)
+	printer.PrintFindResults(results, findDetail)
 
 	return nil
 }

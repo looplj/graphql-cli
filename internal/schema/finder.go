@@ -1,8 +1,10 @@
 package schema
 
 import (
+	"fmt"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -35,7 +37,24 @@ func ParseAndFind(sdl string, keyword string, scope FindScope) ([]FindResult, er
 	}
 
 	searchAll := scope.IsEmpty()
-	keyword = strings.ToLower(keyword)
+
+	var matcher glob.Glob
+
+	if keyword != "" {
+		pattern := strings.ToLower(keyword)
+		if !strings.ContainsAny(pattern, "*?[") {
+			pattern = "*" + pattern + "*"
+		}
+
+		matcher, err = glob.Compile(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("invalid glob pattern %q: %w", keyword, err)
+		}
+	}
+
+	matchName := func(name string) bool {
+		return matcher == nil || matcher.Match(strings.ToLower(name))
+	}
 
 	var results []FindResult
 
@@ -46,7 +65,7 @@ func ParseAndFind(sdl string, keyword string, scope FindScope) ([]FindResult, er
 					continue
 				}
 
-				if keyword == "" || strings.Contains(strings.ToLower(f.Name), keyword) {
+				if matchName(f.Name) {
 					results = append(results, FindResult{
 						Kind:       "query",
 						Name:       f.Name,
@@ -64,7 +83,7 @@ func ParseAndFind(sdl string, keyword string, scope FindScope) ([]FindResult, er
 					continue
 				}
 
-				if keyword == "" || strings.Contains(strings.ToLower(f.Name), keyword) {
+				if matchName(f.Name) {
 					results = append(results, FindResult{
 						Kind:       "mutation",
 						Name:       f.Name,
@@ -81,7 +100,7 @@ func ParseAndFind(sdl string, keyword string, scope FindScope) ([]FindResult, er
 				continue
 			}
 
-			if keyword != "" && !strings.Contains(strings.ToLower(t.Name), keyword) {
+			if !matchName(t.Name) {
 				continue
 			}
 
