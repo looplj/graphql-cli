@@ -34,6 +34,7 @@ var (
 )
 
 func init() {
+	addEndpointFlag(queryCmd)
 	queryCmd.Flags().StringVarP(&queryFile, "file", "f", "", "read query from file")
 	queryCmd.Flags().StringVarP(&queryVariables, "variables", "v", "", "query variables as JSON string")
 	queryCmd.Flags().StringSliceVarP(&queryHeaders, "header", "H", nil, "extra HTTP headers (key=value), can be specified multiple times")

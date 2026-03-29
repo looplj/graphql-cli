@@ -29,6 +29,7 @@ var (
 )
 
 func init() {
+	addEndpointFlag(mutateCmd)
 	mutateCmd.Flags().StringVarP(&mutateFile, "file", "f", "", "read mutation from file")
 	mutateCmd.Flags().StringVarP(&mutateVariables, "variables", "v", "", "mutation variables as JSON string")
 	mutateCmd.Flags().StringSliceVarP(&mutateHeaders, "header", "H", nil, "extra HTTP headers (key=value), can be specified multiple times")

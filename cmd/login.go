@@ -14,27 +14,6 @@ import (
 	"github.com/looplj/graphql-cli/internal/config"
 )
 
-var loginCmd = &cobra.Command{
-	Use:   "login [endpoint]",
-	Short: "Authenticate with a GraphQL endpoint",
-	Long: `Store credentials for a GraphQL endpoint. Credentials are saved
-in the OS keyring (macOS Keychain, Windows Credential Manager, GNOME Keyring)
-with a plaintext file fallback.
-
-Supported auth types:
-  token    - Bearer token (API key, JWT, PAT, etc.)
-  basic    - Username + password (Basic Auth)
-  header   - Custom header key=value
-
-Examples:
-  graphql-cli login                          # login to default endpoint
-  graphql-cli login production               # login to specific endpoint
-  graphql-cli login production --type token  # non-interactive with --token flag
-  graphql-cli login production --type token --token "my-token"`,
-	Args: cobra.MaximumNArgs(1),
-	RunE: runLogin,
-}
-
 var (
 	loginType  string
 	loginToken string
@@ -45,13 +24,38 @@ var (
 )
 
 func init() {
-	loginCmd.Flags().StringVar(&loginType, "type", "", "auth type: token, basic, header")
-	loginCmd.Flags().StringVar(&loginToken, "token", "", "bearer token (for --type token)")
-	loginCmd.Flags().StringVar(&loginUser, "user", "", "username (for --type basic)")
-	loginCmd.Flags().StringVar(&loginPass, "pass", "", "password (for --type basic)")
-	loginCmd.Flags().StringVar(&loginKey, "key", "", "header key (for --type header)")
-	loginCmd.Flags().StringVar(&loginValue, "value", "", "header value (for --type header)")
-	rootCmd.AddCommand(loginCmd)
+	endpointCmd.AddCommand(newLoginCmd())
+}
+
+func newLoginCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "login <endpoint>",
+		Short: "Authenticate with a GraphQL endpoint",
+		Long: `Store credentials for a GraphQL endpoint. Credentials are saved
+in the OS keyring (macOS Keychain, Windows Credential Manager, GNOME Keyring)
+with a plaintext file fallback.
+
+Supported auth types:
+  token    - Bearer token (API key, JWT, PAT, etc.)
+  basic    - Username + password (Basic Auth)
+  header   - Custom header key=value
+
+Examples:
+  graphql-cli endpoint login production
+  graphql-cli endpoint login production --type token  # non-interactive with --token flag
+  graphql-cli endpoint login production --type token --token "my-token"`,
+		Args: cobra.ExactArgs(1),
+		RunE: runLogin,
+	}
+
+	cmd.Flags().StringVar(&loginType, "type", "", "auth type: token, basic, header")
+	cmd.Flags().StringVar(&loginToken, "token", "", "bearer token (for --type token)")
+	cmd.Flags().StringVar(&loginUser, "user", "", "username (for --type basic)")
+	cmd.Flags().StringVar(&loginPass, "pass", "", "password (for --type basic)")
+	cmd.Flags().StringVar(&loginKey, "key", "", "header key (for --type header)")
+	cmd.Flags().StringVar(&loginValue, "value", "", "header value (for --type header)")
+
+	return cmd
 }
 
 func runLogin(cmd *cobra.Command, args []string) error {
@@ -60,12 +64,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	epName, err := resolveEndpointName(args)
-	if err != nil {
-		return err
-	}
-
-	ep, err := cfg.GetEndpoint(epName)
+	ep, err := cfg.GetEndpoint(args[0])
 	if err != nil {
 		return err
 	}
