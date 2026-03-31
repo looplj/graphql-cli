@@ -10,20 +10,21 @@ import (
 	"github.com/looplj/graphql-cli/internal/config"
 )
 
-var logoutCmd = &cobra.Command{
-	Use:   "logout [endpoint]",
-	Short: "Remove stored credentials for an endpoint",
-	Long: `Remove stored credentials for a GraphQL endpoint.
-
-Examples:
-  graphql-cli logout              # logout from default endpoint
-  graphql-cli logout production   # logout from specific endpoint`,
-	Args: cobra.MaximumNArgs(1),
-	RunE: runLogout,
+func init() {
+	endpointCmd.AddCommand(newLogoutCmd())
 }
 
-func init() {
-	rootCmd.AddCommand(logoutCmd)
+func newLogoutCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "logout <endpoint>",
+		Short: "Remove stored credentials for an endpoint",
+		Long: `Remove stored credentials for a GraphQL endpoint.
+
+Examples:
+  graphql-cli endpoint logout production`,
+		Args: cobra.ExactArgs(1),
+		RunE: runLogout,
+	}
 }
 
 func runLogout(cmd *cobra.Command, args []string) error {
@@ -32,12 +33,7 @@ func runLogout(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	epName, err := resolveEndpointName(args)
-	if err != nil {
-		return err
-	}
-
-	ep, err := cfg.GetEndpoint(epName)
+	ep, err := cfg.GetEndpoint(args[0])
 	if err != nil {
 		return err
 	}

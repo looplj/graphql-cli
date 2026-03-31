@@ -37,34 +37,36 @@ go install github.com/looplj/graphql-cli@latest
 
 ## Workflows
 
+Endpoint management commands live under `graphql-cli endpoint ...`.
+
 ### 1. Add an endpoint
 
 **Remote URL:**
 ```bash
-graphql-cli add <name> --url <graphql-url> [--description "desc"] [--header "Key=Value"]
+graphql-cli endpoint add <name> --url <graphql-url> [--description "desc"] [--header "Key=Value"]
 ```
 
 **Local schema file:**
 ```bash
-graphql-cli add <name> --schema-file ./schema.graphql [--description "desc"]
+graphql-cli endpoint add <name> --schema-file ./schema.graphql [--description "desc"]
 ```
 
 Example:
 ```bash
-graphql-cli add production --url https://api.example.com/graphql --description "Prod API"
-graphql-cli add local --schema-file ./testdata/schema.graphql --description "Local schema"
+graphql-cli endpoint add production --url https://api.example.com/graphql --description "Prod API"
+graphql-cli endpoint add local --schema-file ./testdata/schema.graphql --description "Local schema"
 ```
 
 ### 2. Update an endpoint
 
 ```bash
-graphql-cli update <name> --url <new-url> [--description "desc"] [--header "Key=Value"]
+graphql-cli endpoint update <name> --url <new-url> [--description "desc"] [--header "Key=Value"]
 ```
 
 Example:
 ```bash
-graphql-cli update production --url https://api.example.com/v2/graphql
-graphql-cli update production --header "Authorization=Bearer new-token" -d "Updated prod API"
+graphql-cli endpoint update production --url https://api.example.com/v2/graphql
+graphql-cli endpoint update production --header "Authorization=Bearer new-token" -d "Updated prod API"
 ```
 
 Headers are merged — existing headers not specified in the update are preserved.
@@ -72,20 +74,20 @@ Headers are merged — existing headers not specified in the update are preserve
 ### 3. List endpoints
 
 ```bash
-graphql-cli list            # names and URLs
-graphql-cli list --detail   # includes headers (masked) and auth status
+graphql-cli endpoint list            # names and URLs
+graphql-cli endpoint list --detail   # includes headers (masked) and auth status
 ```
 
 ### 4. Authenticate
 
 ```bash
-graphql-cli login <endpoint> --type token --token "my-api-key"
-graphql-cli login <endpoint> --type basic --user admin --pass secret
-graphql-cli login <endpoint> --type header --key X-API-Key --value "key123"
-graphql-cli login -e production --type token --token "my-token"
+graphql-cli endpoint login <endpoint> --type token --token "my-api-key"
+graphql-cli endpoint login <endpoint> --type basic --user admin --pass secret
+graphql-cli endpoint login <endpoint> --type header --key X-API-Key --value "key123"
+graphql-cli endpoint login -e production --type token --token "my-token"
 
 # Remove credentials
-graphql-cli logout <endpoint>
+graphql-cli endpoint logout <endpoint>
 ```
 
 Credentials are stored in the OS keyring (macOS Keychain, Windows Credential Manager, GNOME Keyring) with a plaintext file fallback.
@@ -144,6 +146,27 @@ When executing queries/mutations, headers are merged with this priority (highest
 1. CLI `-H` flags
 2. Stored credentials (`login`)
 3. Config file headers
+
+Each executed GraphQL statement is also appended to `~/.config/graphql-cli/audit.log` as a JSON line containing timestamp, endpoint, status, and the statement text.
+
+Example:
+
+```json
+{"timestamp":"2026-03-29T08:15:30.123456Z","endpoint":"production","url":"https://api.example.com/graphql","status":"success","statement":"query { viewer { id } }"}
+```
+
+To inspect the log stream locally:
+
+```bash
+graphql-cli audit list
+graphql-cli audit list --query
+graphql-cli audit list --status error
+graphql-cli audit list --contains createUser
+graphql-cli audit list --mutation --detail
+
+# Or stream the raw log file
+tail -f ~/.config/graphql-cli/audit.log
+```
 
 ## Common patterns
 

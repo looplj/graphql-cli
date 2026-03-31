@@ -9,18 +9,6 @@ import (
 	"github.com/looplj/graphql-cli/internal/config"
 )
 
-var addCmd = &cobra.Command{
-	Use:   "add <name>",
-	Short: "Add a new endpoint to the configuration",
-	Long: `Add a new GraphQL endpoint. Specify either a remote URL or a local schema file.
-
-Examples:
-  graphql-cli add production --url https://api.example.com/graphql --header "Authorization=Bearer token"
-  graphql-cli add local --schema-file ./schema.graphql --description "Local dev schema"`,
-	Args: cobra.ExactArgs(1),
-	RunE: runAdd,
-}
-
 var (
 	addURL         string
 	addSchemaFile  string
@@ -29,11 +17,28 @@ var (
 )
 
 func init() {
-	addCmd.Flags().StringVar(&addURL, "url", "", "GraphQL endpoint URL")
-	addCmd.Flags().StringVar(&addSchemaFile, "schema-file", "", "path to local GraphQL schema file")
-	addCmd.Flags().StringVarP(&addDescription, "description", "d", "", "endpoint description")
-	addCmd.Flags().StringSliceVar(&addHeaders, "header", nil, "HTTP headers (key=value), can be specified multiple times")
-	rootCmd.AddCommand(addCmd)
+	endpointCmd.AddCommand(newAddCmd())
+}
+
+func newAddCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add <name>",
+		Short: "Add a new endpoint to the configuration",
+		Long: `Add a new GraphQL endpoint. Specify either a remote URL or a local schema file.
+
+Examples:
+  graphql-cli endpoint add production --url https://api.example.com/graphql --header "Authorization=Bearer token"
+  graphql-cli endpoint add local --schema-file ./schema.graphql --description "Local dev schema"`,
+		Args: cobra.ExactArgs(1),
+		RunE: runAdd,
+	}
+
+	cmd.Flags().StringVar(&addURL, "url", "", "GraphQL endpoint URL")
+	cmd.Flags().StringVar(&addSchemaFile, "schema-file", "", "path to local GraphQL schema file")
+	cmd.Flags().StringVarP(&addDescription, "description", "d", "", "endpoint description")
+	cmd.Flags().StringSliceVar(&addHeaders, "header", nil, "HTTP headers (key=value), can be specified multiple times")
+
+	return cmd
 }
 
 func runAdd(cmd *cobra.Command, args []string) error {

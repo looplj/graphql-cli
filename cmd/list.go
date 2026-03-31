@@ -11,18 +11,23 @@ import (
 	"github.com/looplj/graphql-cli/internal/config"
 )
 
-var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all configured endpoints",
-	Args:  cobra.NoArgs,
-	RunE:  runList,
-}
-
 var listDetail bool
 
 func init() {
-	listCmd.Flags().BoolVar(&listDetail, "detail", false, "show endpoint details including headers and auth")
-	rootCmd.AddCommand(listCmd)
+	endpointCmd.AddCommand(newListCmd())
+}
+
+func newListCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all configured endpoints",
+		Args:  cobra.NoArgs,
+		RunE:  runList,
+	}
+
+	cmd.Flags().BoolVar(&listDetail, "detail", false, "show endpoint details including headers and auth")
+
+	return cmd
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -32,7 +37,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(cfg.Endpoints) == 0 {
-		fmt.Println("No endpoints configured. Use 'graphql-cli add' to add one.")
+		fmt.Println("No endpoints configured. Use 'graphql-cli endpoint add' to add one.")
 		return nil
 	}
 

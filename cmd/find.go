@@ -45,6 +45,7 @@ var (
 )
 
 func init() {
+	addEndpointFlag(findCmd)
 	findCmd.Flags().BoolVar(&findQuery, "query", false, "search only Query fields")
 	findCmd.Flags().BoolVar(&findMutation, "mutation", false, "search only Mutation fields")
 	findCmd.Flags().BoolVar(&findType, "type", false, "search only Object/Interface/Union/Scalar types")

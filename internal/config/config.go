@@ -20,9 +20,17 @@ type Config struct {
 	Endpoints []Endpoint `yaml:"endpoints"`
 }
 
-func DefaultConfigPath() string {
+func DefaultConfigDir() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "graphql-cli", "config.yaml")
+	return filepath.Join(home, ".config", "graphql-cli")
+}
+
+func DefaultConfigPath() string {
+	return filepath.Join(DefaultConfigDir(), "config.yaml")
+}
+
+func DefaultAuditLogPath() string {
+	return filepath.Join(DefaultConfigDir(), "audit.log")
 }
 
 func Load(path string) (*Config, error) {
@@ -73,7 +81,7 @@ func (c *Config) Save(path string) error {
 
 func (c *Config) GetEndpoint(name string) (*Endpoint, error) {
 	if name == "" {
-		return nil, fmt.Errorf("no endpoint specified, use -e to specify one (see 'graphql-cli list' for available endpoints)")
+		return nil, fmt.Errorf("no endpoint specified, use -e to specify one (see 'graphql-cli endpoint list' for available endpoints)")
 	}
 
 	for i := range c.Endpoints {

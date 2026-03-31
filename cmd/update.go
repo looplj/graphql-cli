@@ -9,19 +9,6 @@ import (
 	"github.com/looplj/graphql-cli/internal/config"
 )
 
-var updateCmd = &cobra.Command{
-	Use:   "update <name>",
-	Short: "Update an existing endpoint's URL or headers",
-	Long: `Update an existing GraphQL endpoint configuration.
-
-Examples:
-  graphql-cli update production --url https://api.example.com/v2/graphql
-  graphql-cli update production --header "Authorization=Bearer new-token"
-  graphql-cli update production --url https://new-url.com/graphql --header "X-Custom=value"`,
-	Args: cobra.ExactArgs(1),
-	RunE: runUpdate,
-}
-
 var (
 	updateURL         string
 	updateDescription string
@@ -29,10 +16,28 @@ var (
 )
 
 func init() {
-	updateCmd.Flags().StringVar(&updateURL, "url", "", "new GraphQL endpoint URL")
-	updateCmd.Flags().StringVarP(&updateDescription, "description", "d", "", "new endpoint description")
-	updateCmd.Flags().StringSliceVar(&updateHeaders, "header", nil, "HTTP headers to add/update (key=value), can be specified multiple times")
-	rootCmd.AddCommand(updateCmd)
+	endpointCmd.AddCommand(newUpdateCmd())
+}
+
+func newUpdateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update <name>",
+		Short: "Update an existing endpoint's URL or headers",
+		Long: `Update an existing GraphQL endpoint configuration.
+
+Examples:
+  graphql-cli endpoint update production --url https://api.example.com/v2/graphql
+  graphql-cli endpoint update production --header "Authorization=Bearer new-token"
+  graphql-cli endpoint update production --url https://new-url.com/graphql --header "X-Custom=value"`,
+		Args: cobra.ExactArgs(1),
+		RunE: runUpdate,
+	}
+
+	cmd.Flags().StringVar(&updateURL, "url", "", "new GraphQL endpoint URL")
+	cmd.Flags().StringVarP(&updateDescription, "description", "d", "", "new endpoint description")
+	cmd.Flags().StringSliceVar(&updateHeaders, "header", nil, "HTTP headers to add/update (key=value), can be specified multiple times")
+
+	return cmd
 }
 
 func runUpdate(cmd *cobra.Command, args []string) error {

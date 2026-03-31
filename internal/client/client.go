@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
+	"github.com/looplj/graphql-cli/internal/audit"
 	"github.com/looplj/graphql-cli/internal/auth"
 	"github.com/looplj/graphql-cli/internal/config"
 	"github.com/looplj/graphql-cli/internal/printer"
@@ -25,10 +27,16 @@ type Response struct {
 
 // Execute sends a GraphQL request.
 // Header priority: config headers < stored credential < extraHeaders (CLI -H flags).
-func Execute(ep *config.Endpoint, query string, variables map[string]any, extraHeaders map[string]string) (*Response, error) {
+func Execute(ep *config.Endpoint, query string, variables map[string]any, extraHeaders map[string]string) (result *Response, err error) {
 	if ep.URL == "" {
 		return nil, fmt.Errorf("endpoint %q has no URL configured; only local schema_file is available (use 'find' to explore the schema)", ep.Name)
 	}
+
+	defer func() {
+		if auditErr := audit.LogExecution(ep, query, err); auditErr != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to write audit log: %v\n", auditErr)
+		}
+	}()
 
 	reqBody, err := json.Marshal(Request{
 		Query:     query,
@@ -78,10 +86,12 @@ func Execute(ep *config.Endpoint, query string, variables map[string]any, extraH
 		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
 
-	var result Response
-	if err := json.Unmarshal(body, &result); err != nil {
+	var parsed Response
+	if err := json.Unmarshal(body, &parsed); err != nil {
 		return nil, fmt.Errorf("parse response: %w", err)
 	}
 
-	return &result, nil
+	result = &parsed
+
+	return result, nil
 }
