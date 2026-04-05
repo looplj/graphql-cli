@@ -8,7 +8,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/looplj/graphql-cli/internal/schema"
+	"github.com/looplj/graphql-cli/pkg/graphql"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 	dimColor  = color.New(color.FgHiBlack)
 )
 
-func PrintFindResults(results []schema.FindResult, detail bool) {
+func PrintFindResults(results []graphql.FindResult, detail bool) {
 	if len(results) == 0 {
 		dimColor.Println("No results found.")
 		return
